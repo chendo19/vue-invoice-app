@@ -1,6 +1,6 @@
 <template>
   <div @click="checkClick" ref="invoiceWrap" class="invoice-wrap flex flex-column">
-      <form @submit.prevent="submitForm">
+      <form @submit.prevent="submitForm" class="invoice-content">
         <h1 v-if="!editInvoice">New Invoice</h1>
         <h1 v-else>Edit Invoice</h1>
 
@@ -123,6 +123,11 @@
 </template>
 
 <script>
+import { mapMutations } from 'vuex'
+import { uid } from 'uid'
+import { firestoreInstance } from '../firebase/firabaseInit'
+import { doc, setDoc, collection } from 'firebase/firestore'; 
+
 export default {
     name: 'invoiceModal',
     data() {
@@ -141,7 +146,6 @@ export default {
             clientCity: null,
             clientZipCode: null,
             clientCountry: null,
-            invoiceDateUnix: null,
             invoiceDate: null,
             paymentTerms: null,
             paymentDueDateUnix: null,
@@ -152,12 +156,94 @@ export default {
             invoiceItemList: [],
             invoiceTotal: 0,
         }
+    },
+    created() {
+      this.invoiceDate = new Date(Date.now()).toLocaleDateString('en-us', this.dateOptions)
+    },
+    methods: {
+      ...mapMutations(['TOGGLE_INVOICE']),
+      publishInvoice() {
+        this.invoicePending = true
+      },
+      saveDraft() {
+        this.invoiceDraft = true
+      },
+      submitForm() {
+        this.uploadInvoice()
+      },
+      async uploadInvoice() {
+        if (this.invoiceItemList.length <= 0) {
+          alert('Fill out the form')
+          return
+        }
+
+        this.calcInvoiceTotal()
+
+        const collectionRef = doc(collection(firestoreInstance, 'invoices'))
+        
+        const newItem = await setDoc(collectionRef, {
+          invoiceId: uid(6),
+          billerStreetAddress: this.billerStreetAddress,
+          billerCity: this.billerCity,
+          billerZipCode: this.billerZipCode,
+          billerCountry: this.billerCountry,
+          clientName: this.clientName,
+          clientEmail: this.clientEmail,
+          clientStreetAddress: this.clientStreetAddress,
+          clientCity: this.clientCity,
+          clientZipCode: this.clientZipCode,
+          clientCountry: this.clientCountry,
+          invoiceDate: this.invoiceDate,
+          paymentTerms: this.paymentTerms,
+          paymentDueDate: this.paymentDueDate,
+          paymentDueDateUnix: this.paymentDueDateUnix,
+          productDescription: this.productDescription,
+          invoiceItemList: this.invoiceItemList,
+          invoiceTotal: this.invoiceTotal,
+          invoicePending: this.invoicePending,
+          invoiceDraft: this.invoiceDraft,
+          invoicePaid: null,
+        })
+
+        console.log('newItem: ', newItem)
+
+        this.TOGGLE_INVOICE();
+      },
+      calcInvoiceTotal() {
+        this.invoiceTotal = 0
+        this.invoiceItemList.map(item => {
+          this.invoiceTotal += item.total
+        })
+      },
+      addNewInvoiceItem() {
+        this.invoiceItemList.push({
+          id: uid(),
+          itemName: '',
+          qty: '',
+          price: 0,
+          total: 0
+        })
+      },
+      deleteInvoiceItem(id) {
+        this.invoiceItemList = this.invoiceItemList.filter(item => item.id !== id)
+      },
+      closeInvoice() {
+        this.TOGGLE_INVOICE()
+      }
+    },
+    watch: { 
+      paymentTerms() {
+        const futureDate = new Date()
+        this.paymentDueDateUnix = futureDate.setDate(futureDate.getDate() + parseInt(this.paymentTerms))
+        this.paymentDueDate = new Date(this.paymentDueDateUnix).toLocaleDateString('en-us', this.dateOptions)
+      }
     }
 }
 </script>
 
 <style lang="scss" scoped>
 .invoice-wrap {
+  z-index: 100;
   position: fixed;
   top: 0;
   left: 0;
@@ -167,9 +253,11 @@ export default {
   &::-webkit-scrollbar {
     display: none;
   }
+
   @media (min-width: 900px) {
     left: 90px;
   }
+
   .invoice-content {
     position: relative;
     padding: 56px;
