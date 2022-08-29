@@ -126,7 +126,7 @@
 import { mapMutations } from 'vuex'
 import { uid } from 'uid'
 import { firestoreInstance } from '../firebase/firabaseInit'
-import { doc, setDoc, collection } from 'firebase/firestore'; 
+import { doc, setDoc, collection } from 'firebase/firestore'
 
 export default {
     name: 'invoiceModal',
@@ -207,7 +207,7 @@ export default {
 
         console.log('newItem: ', newItem)
 
-        this.TOGGLE_INVOICE();
+        this.TOGGLE_INVOICE()
       },
       calcInvoiceTotal() {
         this.invoiceTotal = 0

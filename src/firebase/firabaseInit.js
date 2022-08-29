@@ -14,6 +14,6 @@ const app = initializeApp(firebaseConfig)
 const firestoreInstance = getFirestore(app)
 
 export {
-    app,
-    firestoreInstance,
- }
+  app,
+  firestoreInstance,
+}

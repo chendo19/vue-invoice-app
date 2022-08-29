@@ -4,7 +4,7 @@
       <Navigation />
       <div class="app-content flex flex-column">
         <transition name="invoice">
-          <InvoiceModal v-if="invoiceModal" />
+          <InvoiceModal v-if="invoiceModalStatus" />
         </transition>
         <router-view />
       </div>
@@ -45,7 +45,7 @@ export default {
     }
   },
   computed: { 
-    ...mapState(['invoiceModal'])
+    ...mapState(['invoiceModalStatus'])
   }
 }
 </script>
