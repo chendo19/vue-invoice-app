@@ -1,6 +1,7 @@
 <template>
   <div @click="checkClick" ref="invoiceWrap" class="invoice-wrap flex flex-column">
       <form @submit.prevent="submitForm" class="invoice-content">
+        <Loading v-show="loading" />
         <h1 v-if="!editInvoice">New Invoice</h1>
         <h1 v-else>Edit Invoice</h1>
 
@@ -127,15 +128,19 @@ import { mapMutations } from 'vuex'
 import { uid } from 'uid'
 import { firestoreInstance } from '../firebase/firabaseInit'
 import { doc, setDoc, collection } from 'firebase/firestore'
+import Loading from './Loading'
 
 export default {
+    components: {
+      Loading,
+    },
     name: 'invoiceModal',
     data() {
         return {
             editInvoice: false,
             dateOptions: { year: "numeric", month: "short", day: "numeric" },
             docId: null,
-            loading: null,
+            loading: false,
             billerStreetAddress: null,
             billerCity: null,
             billerZipCode: null,
@@ -161,7 +166,7 @@ export default {
       this.invoiceDate = new Date(Date.now()).toLocaleDateString('en-us', this.dateOptions)
     },
     methods: {
-      ...mapMutations(['TOGGLE_INVOICE']),
+      ...mapMutations(['TOGGLE_INVOICE', 'TOGGLE_MODAL']),
       publishInvoice() {
         this.invoicePending = true
       },
@@ -177,6 +182,7 @@ export default {
           return
         }
 
+        this.loading = true
         this.calcInvoiceTotal()
 
         const collectionRef = doc(collection(firestoreInstance, 'invoices'))
@@ -206,7 +212,7 @@ export default {
         })
 
         console.log('newItem: ', newItem)
-
+        this.loading = false
         this.TOGGLE_INVOICE()
       },
       calcInvoiceTotal() {
@@ -227,8 +233,13 @@ export default {
       deleteInvoiceItem(id) {
         this.invoiceItemList = this.invoiceItemList.filter(item => item.id !== id)
       },
-      closeInvoice() {
+      closeInvoice () {
         this.TOGGLE_INVOICE()
+      },
+      checkClick (e) {
+        if (e.target === this.$refs.invoiceWrap) {
+          this.TOGGLE_MODAL()
+        }
       }
     },
     watch: { 
@@ -243,7 +254,7 @@ export default {
 
 <style lang="scss" scoped>
 .invoice-wrap {
-  z-index: 100;
+  z-index: 10;
   position: fixed;
   top: 0;
   left: 0;
