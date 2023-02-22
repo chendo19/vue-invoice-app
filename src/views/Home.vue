@@ -3,7 +3,7 @@
     <div class="header flex">
       <div class="left flex flex-column">
         <h1>Invoices</h1>
-        <span>There are 4 total invoices</span>
+        <span>There are {{ invoicesData.length }} total invoices</span>
       </div>
       <div class="right flex">
         <div @click="toggleFilterMenu" class="filter flex">
@@ -18,34 +18,49 @@
         </div>
         <div @click="newInvoice" class="button flex">
           <div class="inner-button flex">
-            <img src="@/assets/icon-plus.svg" alt="">
+            <img src="@/assets/icon-plus.svg" alt="icon">
           </div>
           <span>New invoice</span>
         </div>
       </div>
     </div>
+    <div v-if="invoicesData.length > 0">
+      <invoice v-for="(invoice, index) in invoicesData"
+        :invoice="invoice"
+        :key="index"
+      />
+    </div>
+    <div v-else class="empty flex flex-column">
+      <img src="@/assets/illustration-empty.svg" alt="empty img"> 
+    </div>
   </div>
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
+import Invoice from '../components/Invoice.vue'
+import { mapMutations, mapState } from 'vuex'
 
 export default {
   name: "Home",
-  components: {},
+  components: {
+    Invoice
+  },
   data() {
     return {
       filterMenu: null
     }
   },
   methods: {
-    ...mapMutations(['TOGGLE_INVOICE']),
+    ...mapMutations(['TOGGLE_INVOICE_FORM']),
     newInvoice() {
-      this.TOGGLE_INVOICE()
+      this.TOGGLE_INVOICE_FORM()
     },
     toggleFilterMenu () {
       this.filterMenu = !this.filterMenu
     }
+  },
+  computed: {
+    ...mapState(['invoicesData'])
   }
 };
 </script>

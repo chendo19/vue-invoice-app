@@ -11,20 +11,26 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
+import { mapMutations, mapState } from 'vuex'
 
 export default {
     name: 'modal',
     methods: {
-      ...mapMutations(['TOGGLE_INVOICE', 'TOGGLE_MODAL']),
+      ...mapMutations(['TOGGLE_INVOICE_FORM', 'TOGGLE_MODAL_CONFIRM', 'TOGGLE_EDIT_INVOICE']),
       closeModal () {
-        this.TOGGLE_MODAL()
+        this.TOGGLE_MODAL_CONFIRM()
       },
       closeInvoice () {
-        this.TOGGLE_MODAL()
-        this.TOGGLE_INVOICE()
+        this.TOGGLE_MODAL_CONFIRM()
+        this.TOGGLE_INVOICE_FORM()
+        if (this.editInvoice) {
+          this.TOGGLE_EDIT_INVOICE()
+        }
       }
-    }
+    },
+    computed: {
+      ...mapState(['editInvoice'])
+    },
 }
 </script>
 

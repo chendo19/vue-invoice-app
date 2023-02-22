@@ -124,7 +124,7 @@
 </template>
 
 <script>
-import { mapMutations } from 'vuex'
+import { mapMutations, mapState } from 'vuex'
 import { uid } from 'uid'
 import { firestoreInstance } from '../firebase/firabaseInit'
 import { doc, setDoc, collection } from 'firebase/firestore'
@@ -137,7 +137,6 @@ export default {
     name: 'invoiceModal',
     data() {
         return {
-            editInvoice: false,
             dateOptions: { year: "numeric", month: "short", day: "numeric" },
             docId: null,
             loading: false,
@@ -163,10 +162,38 @@ export default {
         }
     },
     created() {
-      this.invoiceDate = new Date(Date.now()).toLocaleDateString('en-us', this.dateOptions)
+      if(!this.editInvoice) {
+        this.invoiceDate = new Date(Date.now()).toLocaleDateString('en-us', this.dateOptions)
+      }
+
+      if (this.editInvoice) {
+        const currentInvoice = this.currentInvoiceArray[0]
+          this.docId = currentInvoice.docId,
+          this.billerStreetAddress = currentInvoice.billerStreetAddress
+          this.billerCity = currentInvoice.billerCity
+          this.billerZipCode = currentInvoice.billerZipCode
+          this.billerCountry = currentInvoice.billerCountry
+          this.clientName = currentInvoice.clientName
+          this.clientEmail = currentInvoice.clientEmail
+          this.clientStreetAddress = currentInvoice.clientStreetAddress
+          this.clientCity = currentInvoice.clientCity
+          this.clientZipCode = currentInvoice.clientZipCode
+          this.clientCountry = currentInvoice.clientCountry
+          this.invoiceDate = currentInvoice.invoiceDate
+          this.paymentTerms = currentInvoice.paymentTerms
+          this.paymentDueDate = currentInvoice.paymentDueDate
+          this.paymentDueDateUnix = currentInvoice.paymentDueDateUnix
+          this.productDescription = currentInvoice.productDescription
+          this.invoiceItemList = currentInvoice.invoiceItemList
+          this.invoiceTotal = currentInvoice.invoiceTotal
+          this.invoicePending = currentInvoice.invoicePending
+          this.invoiceDraft = currentInvoice.invoiceDraft
+          this.invoicePaid = currentInvoice.invoicePaid
+      }
+      
     },
     methods: {
-      ...mapMutations(['TOGGLE_INVOICE', 'TOGGLE_MODAL']),
+      ...mapMutations(['TOGGLE_INVOICE_FORM', 'TOGGLE_MODAL_CONFIRM', 'TOGGLE_EDIT_INVOICE']),
       publishInvoice() {
         this.invoicePending = true
       },
@@ -213,7 +240,7 @@ export default {
 
         console.log('newItem: ', newItem)
         this.loading = false
-        this.TOGGLE_INVOICE()
+        this.TOGGLE_INVOICE_FORM()
       },
       calcInvoiceTotal() {
         this.invoiceTotal = 0
@@ -234,13 +261,19 @@ export default {
         this.invoiceItemList = this.invoiceItemList.filter(item => item.id !== id)
       },
       closeInvoice () {
-        this.TOGGLE_INVOICE()
+        this.TOGGLE_INVOICE_FORM()
+        if (this.editInvoice) {
+          this.TOGGLE_EDIT_INVOICE()
+        }
       },
       checkClick (e) {
         if (e.target === this.$refs.invoiceWrap) {
-          this.TOGGLE_MODAL()
+          this.TOGGLE_MODAL_CONFIRM()
         }
       }
+    },
+    computed: {
+      ...mapState(['editInvoice', 'currentInvoiceArray'])
     },
     watch: { 
       paymentTerms() {

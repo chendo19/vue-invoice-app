@@ -1,11 +1,11 @@
 <template>
-  <div>
+  <div v-if="invoicesLoaded">
     <div v-if="!mobile" class="app flex flex-column">
       <Navigation />
       <div class="app-content flex flex-column">
-        <Modal v-if="modalActive" />
+        <Modal v-if="modalConfirmStatus" />
         <transition name="invoice">
-          <InvoiceModal v-if="invoiceModalStatus" />
+          <InvoiceModal v-if="invoiceModalFormStatus" />
         </transition>
         <router-view />
       </div>
@@ -51,7 +51,7 @@ export default {
     }
   },
   computed: { 
-    ...mapState(['invoiceModalStatus', 'modalActive'])
+    ...mapState(['invoiceModalFormStatus', 'modalConfirmStatus', 'invoicesLoaded'])
   }
 }
 </script>
