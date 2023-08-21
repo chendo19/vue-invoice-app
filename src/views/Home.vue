@@ -3,17 +3,17 @@
     <div class="header flex">
       <div class="left flex flex-column">
         <h1>Invoices</h1>
-        <span>There are {{ invoicesData.length }} total invoices</span>
+        <span>There are {{ filteredData.length }} total invoices</span>
       </div>
       <div class="right flex">
         <div @click="toggleFilterMenu" class="filter flex">
-          <span>Filter by status</span>
+          <span>Filter by status <span v-if="filteredInvoice">: {{ filteredInvoice }}</span></span>
           <img src="@/assets/icon-arrow-down.svg" alt="">
           <ul v-show="filterMenu" class="filter-menu">
-            <li>Draft</li>
-            <li>Pending</li>
-            <li>Paid</li>
-            <li>Clear Filter</li>
+            <li @click="filterInvoices('draft')">Draft</li>
+            <li @click="filterInvoices('pending')">Pending</li>
+            <li @click="filterInvoices('paid')">Paid</li>
+            <li @click="filterInvoices('clear')">Clear Filter</li>
           </ul>
         </div>
         <div @click="newInvoice" class="button flex">
@@ -24,8 +24,8 @@
         </div>
       </div>
     </div>
-    <div v-if="invoicesData.length > 0">
-      <invoice v-for="(invoice, index) in invoicesData"
+    <div v-if="filteredData.length > 0">
+      <invoice v-for="(invoice, index) in filteredData"
         :invoice="invoice"
         :key="index"
       />
@@ -37,32 +37,64 @@
 </template>
 
 <script>
-import Invoice from '../components/Invoice.vue'
-import { mapMutations, mapState } from 'vuex'
+import Invoice from '@/components/Invoice.vue'
+import { useStore } from 'vuex'
+import { ref, computed } from 'vue'
 
 export default {
   name: "Home",
   components: {
     Invoice
   },
-  data() {
+  setup() {
+    const store = useStore()
+    const filterMenu = ref(null)
+    const filteredInvoice = ref(null)
+
+    const toggleInvoiceForm = () => store.commit('TOGGLE_INVOICE_FORM')
+    const filteredData = computed(() => {
+      return store.state.invoicesData.filter(invoice => {
+        if (filteredInvoice.value === 'draft') {
+          return invoice.invoiceDraft === true
+        }
+        if (filteredInvoice.value === 'pending') {
+          return invoice.invoicePending === true
+        }
+        if (filteredInvoice.value === 'paid') {
+          return invoice.invoicePaid === true
+        }
+
+        return invoice
+      })
+    })
+
+    const filterInvoices = (type) =>  {
+      if (type === 'clear') {
+        filteredInvoice.value = null
+        return
+      }
+
+      filteredInvoice.value = type
+    }
+
+    const newInvoice = () =>  {
+      toggleInvoiceForm()
+    }
+
+    const toggleFilterMenu = () => {
+      filterMenu.value = !filterMenu.value 
+    }
+
     return {
-      filterMenu: null
+      filteredInvoice,
+      filterInvoices,
+      newInvoice,
+      toggleFilterMenu,
+      filterMenu,
+      filteredData
     }
-  },
-  methods: {
-    ...mapMutations(['TOGGLE_INVOICE_FORM']),
-    newInvoice() {
-      this.TOGGLE_INVOICE_FORM()
-    },
-    toggleFilterMenu () {
-      this.filterMenu = !this.filterMenu
-    }
-  },
-  computed: {
-    ...mapState(['invoicesData'])
   }
-};
+}
 </script>
 
 <style lang="scss" scoped>

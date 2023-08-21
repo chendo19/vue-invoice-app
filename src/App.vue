@@ -11,16 +11,17 @@
       </div>
     </div>
     <div v-else class="mobile-message flex flex-column">
-      <h2>Sorry, this app is not supported on mobile devices.</h2>
+      <h2>No supported on mobile</h2>
     </div>
   </div>
 </template>
 
 <script>
-import { mapActions, mapState } from 'vuex'
-import Navigation from './components/Navigation'
-import InvoiceModal from './components/InvoiceModal'
-import Modal from './components/Modal'
+import Navigation from '@/components/Navigation'
+import InvoiceModal from '@/components/InvoiceModal'
+import Modal from '@/components/Modal'
+import { ref, computed } from 'vue'
+import { useStore } from 'vuex'
 
 export default {
   components: {
@@ -28,30 +29,35 @@ export default {
     InvoiceModal,
     Modal
   },
-  data() {
-    return {
-      mobile: null
-    }
-  },
-  created() {
-    this.GET_INVOICES()
-    //this.GET_SINGLE_INVOICE()
-    this.checkScreen()
-    window.addEventListener('resize', this.checkScreen)
-  },
-  methods: {
-    ...mapActions(['GET_INVOICES', 'GET_SINGLE_INVOICE']),
-    checkScreen() {
+  setup() {
+    const mobile = ref(null)
+    const store = useStore()
+    const invoiceModalFormStatus = computed(() => store.state.invoiceModalFormStatus)
+    const modalConfirmStatus = computed(() => store.state.modalConfirmStatus)
+    const invoicesLoaded = computed(() => store.state.invoicesLoaded)
+    const getInvoices = () => store.dispatch('GET_INVOICES')
+    
+    getInvoices()
+
+    const checkScreen = () => {
       const windowWidth = window.innerWidth
       if (windowWidth <= 750) {
-        this.mobile = true
+        mobile.value = true
         return
       }
-      this.mobile = false
+      mobile.value = false
     }
-  },
-  computed: { 
-    ...mapState(['invoiceModalFormStatus', 'modalConfirmStatus', 'invoicesLoaded'])
+    window.addEventListener('resize', () => {
+      checkScreen()
+    })
+
+    return {
+      invoiceModalFormStatus,
+      modalConfirmStatus,
+      invoicesLoaded,
+      mobile,
+      documents
+    }
   }
 }
 </script>
